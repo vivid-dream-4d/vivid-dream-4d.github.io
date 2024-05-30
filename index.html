@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="VividDream: Generating 3D Scene with Ambient Dynamics">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VividDream: Generating 3D Scene with Ambient Dynamics</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="./assets/css/bulma.min.css">
+  <link rel="stylesheet" href="./assets/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./assets/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./assets/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.8.0/codemirror.min.css">
+
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./assets/css/index.css">
+  <!-- <link rel="stylesheet" href="./assets/css/app.css"> -->
+  <!-- <link rel="icon" href="./assets/images/favicon.svg"> -->
+  
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.8.0/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.5.3/clipboard.min.js"></script>
+  <script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./assets/js/fontawesome.all.min.js"></script>
+  <script src="./assets/js/bulma-carousel.min.js"></script>
+  <script src="./assets/js/bulma-slider.min.js"></script>
+  <script src="./assets/js/index.js"></script>
+  <script src="./assets/js/app.js"></script>
+  <script src="./assets/js/synced_video_selector.js"></script>
+</head>
+<body onresize="reload();">
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title" style="font-size: 32pt;"><span style="font-weight: bolder;">VidvidDream</span><br><span style="font-weight:normal">Generating 3D Scene with Ambient Dynamics</span></h1>
+          <div class="is-size-5 publication-authors">
+			<spacn class="author-block"></span>
+          </div>
+
+          <div class="is-size-5 publication-authors">
+            <span>Anonymous Authors</span>
+          </div>
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <!-- PDF Link. -->
+              <span class="link-block">
+                <a href="#"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                  </span>
+                  <span>PDF</span>
+                </a>
+                <a href="#"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fab fa-github"></i>
+                  </span>
+                  <span>Code (comming soon)</span>
+                </a>
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id='sec:demo' class="hero is-small">
+  <div class="container"> 
+    
+    <div class="container-fluid">
+      <!-- <h2 class="title has-text-centered is-3">Demo</h2> -->
+      <h2 class="title has-text-centered is-size-5" style="font-weight: 400; font-style: italic;">Generate an explorable 3D scene with ambient dynamics from a single input image or text prompt.</h2>
+      <div class="row py-5 mt-5 bg-dark">
+          <div class="col-2"></div>
+          <div class="col-md-8">
+              <script>
+                  activeMethodPill = "zipnerf"
+                  activeScenePill = document.querySelector('.scene-pill.active-pill');
+                  activeModePill = document.querySelector('.mode-pill.active-pill');
+              </script>
+              <div class="has-text-centered text-center">
+                  <div class="video-container">
+                      <video class="video" style="height: 480px; max-width: 100%;" m id="compVideo0" loop playsinline autoplay muted>
+                          <source src="assets/videos/demo/waterfalls.mp4" />
+                      </video>
+                      <video class="video" style="height: 480px; max-width: 100%;" id="compVideo1" loop playsinline autoplay muted hidden>
+                          <source src="assets/videos/demo/waterfalls.mp4" />
+                      </video>
+                  </div>
+                  <div class="text-center" style="color: black;" id="mode-pills">
+                      <div class="btn-group btn-group-sm">
+                          <span class="button is-normal is-rounded is-dark mode-pill active" data-value="rgb"
+                              onclick="selectCompVideo(activeMethodPill, activeScenePill, null, this)">
+                              RGB
+                          </span>
+                          <span class="button is-normal is-rounded is-dark btn btn-primary mode-pill" data-value="depth"
+                              onclick="selectCompVideo(activeMethodPill, activeScenePill, null, this)">
+                              Depth
+                          </span>
+                      </div>
+                  </div>
+
+
+                  <br>
+                  <script>
+                      video0 = document.getElementById("compVideo0");
+                      video1 = document.getElementById("compVideo1");
+
+                      video0.addEventListener('loadedmetadata', function() {
+                          if (activeVidID == 0 && select){
+                              video0.play();
+                              // print video size
+                              console.log(video0.videoWidth, video0.videoHeight);
+                              video0.hidden = false;
+                              video1.hidden = true;
+                          }
+                      });
+
+                      video1.addEventListener('loadedmetadata', function() {
+                          if (activeVidID == 1 && select){
+                              video1.play();
+                              // print video size
+                              console.log(video1.videoWidth, video1.videoHeight);
+                              video0.hidden = true;
+                              video1.hidden = false;
+                          }
+                      });
+                  </script>
+
+                  <div class="pill-row scene-pills" id="scene-pills">
+                    <span class="pill scene-pill active" data-value="waterfalls" onclick="selectCompVideo(activeMethodPill, this, 3)">
+                        <img class="thumbnail-img" src="assets/thumbnails/waterfalls.jpg" alt="waterfalls" width="64">
+                    </span>
+                    <span class="pill scene-pill" data-value="campfire" onclick="selectCompVideo(activeMethodPill, this, 3)">
+                        <img class="thumbnail-img" src="assets/thumbnails/campfire.jpg" alt="waterfalls" width="64">
+                    </span>
+                    <span class="pill scene-pill" data-value="japan_estate" onclick="selectCompVideo(activeMethodPill, this, 3)">
+                      <img class="thumbnail-img" src="assets/thumbnails/japan-estate.jpg" alt="waterfalls" width="64">
+                    </span>
+                    <span class="pill scene-pill" data-value="hallstatt" onclick="selectCompVideo(activeMethodPill, this, 3)">
+                      <img class="thumbnail-img" src="assets/thumbnails/hallstatt.jpg" alt="waterfalls" width="64">
+                    </span>
+                    <span class="pill scene-pill" data-value="river" onclick="selectCompVideo(activeMethodPill, this, 3)">
+                      <img class="thumbnail-img" src="assets/thumbnails/river.jpg" alt="waterfalls" width="64">
+                    </span>
+                    <span class="pill scene-pill" data-value="seaside" onclick="selectCompVideo(activeMethodPill, this, 3)">
+                      <img class="thumbnail-img" src="assets/thumbnails/seaside.jpg" alt="waterfalls" width="64">
+                    </span>
+                    <span class="pill scene-pill" data-value="green-lake" onclick="selectCompVideo(activeMethodPill, this, 3)">
+                      <img class="thumbnail-img" src="assets/thumbnails/green-lake.jpg" alt="waterfalls" width="64">
+                    </span>
+                    <span class="pill scene-pill" data-value="argenteuil" onclick="selectCompVideo(activeMethodPill, this, 3)">
+                      <img class="thumbnail-img" src="assets/thumbnails/argenteuil.jpg" alt="waterfalls" width="64">
+                    </span>
+                    <span class="pill scene-pill" data-value="canyon" onclick="selectCompVideo(activeMethodPill, this, 3)">
+                      <img class="thumbnail-img" src="assets/thumbnails/canyon.jpg" alt="waterfalls" width="64">
+                    </span>
+                    <!-- new line -->
+                    <br/>
+                    <span class="pill scene-pill" data-value="artic" onclick="selectCompVideo(activeMethodPill, this, 3)">
+                      <img class="thumbnail-img" src="assets/thumbnails/artic.jpg" alt="waterfalls" width="64">
+                    </span>
+                    <span class="pill scene-pill" data-value="flag" onclick="selectCompVideo(activeMethodPill, this, 3)">
+                      <img class="thumbnail-img" src="assets/thumbnails/flag.png" alt="waterfalls" width="64">
+                    </span>
+                    <span class="pill scene-pill" data-value="lake-van-goh" onclick="selectCompVideo(activeMethodPill, this, 3)">
+                      <img class="thumbnail-img" src="assets/thumbnails/lake-van-goh.png" alt="waterfalls" width="64">
+                    </span>
+                    <span class="pill scene-pill" data-value="meadow_river" onclick="selectCompVideo(activeMethodPill, this, 3)">
+                      <img class="thumbnail-img" src="assets/thumbnails/meadow-river.png" alt="waterfalls" width="64">
+                    </span>
+                    <span class="pill scene-pill" data-value="fireworks" onclick="selectCompVideo(activeMethodPill, this, 3)">
+                      <img class="thumbnail-img" src="assets/thumbnails/fireworks.png" alt="waterfalls" width="64">
+                    </span>
+                    <span class="pill scene-pill" data-value="lightning" onclick="selectCompVideo(activeMethodPill, this, 3)">
+                      <img class="thumbnail-img" src="assets/thumbnails/lightning.png" alt="waterfalls" width="64">
+                    </span>
+                    <span class="pill scene-pill" data-value="aurora" onclick="selectCompVideo(activeMethodPill, this, 3)">
+                      <img class="thumbnail-img" src="assets/thumbnails/aurora.png" alt="waterfalls" width="64">
+                    </span>
+                    <span class="pill scene-pill" data-value="tornado" onclick="selectCompVideo(activeMethodPill, this, 3)">
+                      <img class="thumbnail-img" src="assets/thumbnails/tornado.png" alt="waterfalls" width="64">
+                    </span>
+                    <span class="pill scene-pill" data-value="forest_fire" onclick="selectCompVideo(activeMethodPill, this, 3)">
+                      <img class="thumbnail-img" src="assets/thumbnails/forest_fire.png" alt="waterfalls" width="64">
+                    </span>
+                  </div>
+                  <br/>
+                  <p class="text-justify text-white" style="text-align: center;" id="prompt-box"></p>
+                  
+                  <script>
+                      activeMethodPill = document.querySelector('.method-pill.active-pill');
+                      activeScenePill = document.querySelector('.scene-pill.active-pill');
+                      activeModePill = document.querySelector('.mode-pill.active-pill');
+                  </script>
+              </div>
+
+          </div>
+          <div class="col-2"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="abstract">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column">
+        <h2 class="title is-3 has-text-centered">Abstract</h2>
+        <div class="column has-text-justified">
+          <p>We introduce VividDream, a method for generating explorable 4D scenes with ambient dynamics from a single input image or text prompt. 
+            VividDream first expands an input image into a static 3D point cloud through iterative inpainting and geometry merging. 
+            An ensemble of animated videos is then generated using video diffusion models with quality refinement techniques and conditioned on renderings of the static 3D scene from the sampled camera trajectories.
+            We then optimize a canonical 4D scene representation using an animated video ensemble, with per-video motion embeddings and visibility masks to mitigate inconsistencies. 
+            The resulting 4D scene enables free-view exploration of a 3D scene with plausible ambient scene dynamics. 
+            Experiments demonstrate that VividDream can provide human viewers with compelling 4D experiences generated based on diverse real images and text prompts.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="method-overview">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column">
+        <h2 class="title is-3 has-text-centered">Method Overview</h2>
+        <div class="column has-text-justified">
+          <image src="assets/images/method-overview.png"></image>
+          <br>
+          <br>
+          <p>Our method takes either a single image or a text prompt as input. 
+            For an image input, we generate a caption using <a href="https://arxiv.org/abs/2301.12597">BLIP-2</a> and estimate its depth using <a href="https://depth-anything.github.io/">DepthAnything</a>. 
+            For a text prompt input, we generate the corresponding image using <a href="https://arxiv.org/abs/2112.10752">Stable-Diffusion</a>. 
+            The image, text prompt, and estimated depth form the initialization for the subsequent stages.
+            <br><br>
+            In Stage 1, we expand the initial 3D point cloud through an iterative process of novel view inpainting and point cloud merging using aligned depth estimates. 
+            <br><br>
+            Stage 2 focuses on generating the scene motions by rendering K static view-extrapolation videos covering the entire 3D scene. 
+            Each video is first animated using <a href="https://time-reversal.github.io/">Time-Reversal</a> with static renderings as conditions.
+            To improve the video quality, we refine the animated videos using <a href="https://huggingface.co/stabilityai/stable-video-diffusion-img2vid-xt">Stable Video Diffusion</a>.
+            However, this refinement may cause the camera motion to deviate from the desired trajectory. We mitigate this issue by applying a smooth transition on the last few frames using <a href="https://film-net.github.io/">FILM</a> to match the conditioning end view.
+            <br><br>
+            Finally, in Stage 3, we train the 4D scene model, <a href="https://guanjunwu.github.io/4dgs/">4DGS</a>, using the animated videos from Stage 2. 
+            To handle appearance and motion inconsistencies among the multi-view videos, we apply visibility masks with soft blending weights and introduce a per-video motion embedding inspired by <a href="https://nerf-w.github.io/">NeRF-W</a>. 
+            The resulting 4D scene model enables consistent motion and immersive 4D scene exploration.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<br/>
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column">
+        <h2 class="title is-3">Scene Motion Generation with Controlled Camera Trajectory</h2>
+        <p></p>
+        <div class="column has-text-centered">
+          <div class="publication-links">
+              <span class="active btn-compare-video-gen link-block external-link button is-normal is-rounded is-dark"
+                   onclick="change_video_gen(this, 'comp_svd')">
+                <span>SVD</span>
+              </span>
+              <span class="btn-compare-video-gen link-block external-link button is-normal is-rounded is-dark"
+                   onclick="change_video_gen(this, 'comp_dynamicrafter')">
+                <span>DynamiCrafter</span>
+              </span>
+              <span class="btn-compare-video-gen link-block external-link button is-normal is-rounded is-dark"
+                   onclick="change_video_gen(this, 'comp_motionctrl')">
+                <span>MotionCtrl + SVD</span>
+              </span>
+              <span class="btn-compare-video-gen link-block external-link button is-normal is-rounded is-dark"
+                   onclick="change_video_gen(this, 'comp_cameractrl')">
+                <span>CameraCtrl + SVD</span>
+              </span>
+              <span class="btn-compare-video-gen link-block external-link button is-normal is-rounded is-dark"
+                   onclick="change_video_gen(this, 'comp_tr')">
+                <span>Time-Reversal + SVD</span>
+              </span>
+          </div>
+        </div>
+        <div class="column has-text-centered">
+          <div class="publication-links">
+              <span class="btn-compare-video-gen link-block external-link button is-normal is-rounded is-dark"
+                   onclick="change_video_gen(this, 'comp_ours_baseline')">
+                <span>Our baseline: Time-Reversal with SDEdit</span>
+              </span>
+              <span class="btn-compare-video-gen link-block external-link button is-normal is-rounded is-dark"
+                   onclick="change_video_gen(this, 'comp_tr-sdedit_svd-sdedit')">
+                <span>Our SVD-SDEdit refinement</span>
+              </span>
+              <span class="btn-compare-video-gen link-block external-link button is-normal is-rounded is-dark"
+                   onclick="change_video_gen(this, 'comp_svd-sdedit_correct')">
+                <span>Our end-frame correction (final)</span>
+              </span>
+          </div>
+        </div>
+        <div class="column">
+            <video id="video_video_gen_comparison" 
+                autoplay controls muted loop playsinline height="100%">
+                <source id="source_video_gen_comparison" 
+                    src="./assets/videos/video-generation/comp_svd.mp4" 
+                    type="video/mp4">
+            </video>
+            <div class="columns">
+              <div id="label-video-gen-left" class="column has-text-centered">
+                  <h2><b>Static-point-cloud rendering video with specified trajectory</b></h2>
+              </div>
+              <div class="column has-text-centered" id="label-video-gen-mid" style="display: none;">
+                  <h2><b>Stable Video Diffusion</b></h2>
+              </div>
+              <div class="column has-text-centered" id="label-video-gen-right">
+                <h2><b>Stable Video Diffusion</b></h2>
+              </div>
+            </div>
+            <div>
+                <p id="video_gen_method_desc">Naively applying <a href="https://huggingface.co/stabilityai/stable-video-diffusion-img2vid-xt">SVD</a> with only the start view results in uncontrollable camera poses.</p>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<br/>
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column">
+        <h2 class="title is-3">Comparisons</h2>
+        <!-- <div style="text-align: justify;">
+          <p>We compare with a baseline method and our three ablated versions. </p><br/>
+          <p>The baseline method first generates a single SVD video and then perform video 3D reconstruction for training a 4D scene model, leading to many unseen areas and limited free-view synthesis.</p>
+          <br/>
+          <p>In contrast, our method trains with multiple animated videos for large scene expansion.</p>
+          <p>We adopt a second-time SDEdit to enhance the quality of video generation</p>
+          <p>To handle the inconsistencies among multiple videos, we introduce a explicit visibility masking and implicit motion embedding.</p>
+          
+        </div> -->
+        <p></p>
+        <div class="column has-text-centered">
+          <div class="publication-links">
+              <span class="active btn-compare-method link-block external-link button is-normal is-rounded is-dark"
+                   onclick="change_method(this, 'baseline')">
+                <span>Baseline</span>
+              </span>
+              <span class="btn-compare-method link-block external-link button is-normal is-rounded is-dark"
+                   onclick="change_method(this, 'second')">
+                <span>Ours w/o SDEdit quality refine</span>
+              </span>
+              <span class="btn-compare-method link-block external-link button is-normal is-rounded is-dark"
+                   onclick="change_method(this, 'mask')">
+                <span>Ours w/o visibility mask</span>
+              </span>
+              <span class="btn-compare-method link-block external-link button is-normal is-rounded is-dark"
+                   onclick="change_method(this, 'embed')">
+                <span>Ours w/o motion embedding</span>
+              </span>
+          </div>
+        </div>
+        <div class="column has-text-centered">
+          <div class="publication-links">
+              <span class="btn-compare-case link-block external-link button is-normal is-rounded is-dark"
+                   onclick="change_comparison_video(this, 'waterfalls');">
+                <span>waterfalls</span>
+              </span>
+              <span class="btn-compare-case link-block external-link button is-normal is-rounded is-dark"
+                   onclick="change_comparison_video(this, 'campfire')">
+                <span>campfire</span>
+              </span>
+          </div>
+        </div>
+        <div class="column">
+            <video id="video_method_comparison" 
+                autoplay controls muted loop playsinline height="100%">
+                <source id="source_method_comparison" 
+                    src="./assets/videos/comparisons/waterfalls_baseline.mp4" 
+                    type="video/mp4">
+            </video>
+            <div class="columns">
+              <div class="column has-text-centered">
+                  <h2 id="method_label"><b>Baseline</b></h2>
+              </div>
+              <div class="column has-text-centered">
+                  <h2><b>Ours full</b></h2>
+              </div>
+            </div>
+            <div>
+                <p id="method_desc">The baseline method first generates a single SVD video and then perform video 3D reconstruction for training a 4D scene model, leading to many unseen areas and limited free-view synthesis.</p>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="acknowledgements">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered ">
+      <div class="column">
+        <h2 class="title is-3">Acknowledgements</h2>
+        <div class="column has-text-justified">
+          <span>We extend our gratitude to the developers of <a href="https://huggingface.co/stabilityai/stable-video-diffusion-img2vid-xt">Stable Video Diffusion</a>, <a href="https://huggingface.co/docs/diffusers/en/using-diffusers/sdxl">Stable Diffusion-XL</a>, <a href="https://film-net.github.io/">FILM</a>, <a href="">DepthAnything</a>, and <a href="">BLIP-2</a> for providing their models and codes. 
+          We also thank the authors of <a href="https://time-reversal.github.io/">Time-Reversal</a> for their detailed documentation, which was invaluable for our re-implementation.
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="content is-centered">
+        <p>
+          This template is borrowed from <a
+          href="https://github.com/nerfies/nerfies.github.io">nerfies</a>
+          and <a href="https://realmdreamer.github.io/">RealmDreamer</a>.
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
